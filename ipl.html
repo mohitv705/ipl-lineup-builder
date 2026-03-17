@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IPL 2026 | PRO BUILDER</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&family=Oswald:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root { --team-accent: #fadb12; --bg: #05070a; --glass: rgba(255, 255, 255, 0.07); --border: rgba(255, 255, 255, 0.12); }
+        
+        body { 
+            margin: 0; padding: 0; background: var(--bg); color: #fff; 
+            font-family: 'Outfit', sans-serif; display: flex; 
+            flex-direction: column; height: 100vh; overflow: hidden; 
+        }
+
+        /* Desktop Layout Fix */
+        @media (min-width: 1024px) {
+            body { flex-direction: row; }
+        }
+
+        .bg-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 20% 30%, var(--team-accent) 0%, transparent 40%); opacity: 0.15; filter: blur(80px); z-index: -1; }
+
+        /* Sidebar / Selection Area */
+        .sidebar { 
+            width: 100%; height: 60vh; background: rgba(10, 15, 25, 0.9); 
+            backdrop-filter: blur(50px); border-top: 1px solid var(--border); 
+            padding: 20px; display: flex; flex-direction: column; z-index: 10;
+            order: 2; overflow-y: auto;
+        }
+
+        @media (min-width: 1024px) {
+            .sidebar { width: 420px; height: 100vh; border-top: none; border-right: 1px solid var(--border); order: 1; }
+        }
+
+        /* Main View / Squad Pool */
+        .main-view { 
+            flex: 1; padding: 20px; overflow-y: auto; order: 1;
+            height: 40vh;
+        }
+
+        @media (min-width: 1024px) {
+            .main-view { padding: 40px; height: 100vh; order: 2; }
+        }
+
+        /* Typography */
+        h1 { font-family: 'Oswald', sans-serif; font-size: 11px; letter-spacing: 3px; color: var(--team-accent); margin-bottom: 10px; text-transform: uppercase; }
+        .team-display { font-size: 28px; font-weight: 900; margin-bottom: 20px; letter-spacing: -1px; }
+        @media (min-width: 1024px) { .team-display { font-size: 48px; } }
+
+        /* Controls */
+        select, .search-bar { background: #111; color: #fff; border: 1px solid var(--border); padding: 12px; border-radius: 12px; width: 100%; font-size: 14px; margin-bottom: 15px; outline: none; }
+        
+        .squad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+        .p-card { background: var(--glass); border: 1px solid var(--border); padding: 15px 5px; border-radius: 15px; text-align: center; cursor: pointer; position: relative; font-size: 11px; }
+        .p-card.is-os::before { content: '✈'; position: absolute; top: 5px; right: 5px; font-size: 10px; color: var(--team-accent); }
+        .p-card.selected { opacity: 0.1; pointer-events: none; filter: grayscale(1); }
+
+        /* Playing 11 Rows */
+        .order-row { background: rgba(255,255,255,0.04); padding: 8px; border-radius: 10px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; border-left: 4px solid var(--team-accent); }
+        .num { font-weight: 900; color: var(--team-accent); width: 20px; font-size: 14px; }
+        .name-cell { flex: 1; font-size: 12px; font-weight: 700; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .badge-btn { background: #222; border: 1px solid #444; color: #fff; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 9px; font-weight: 900; }
+        .badge-btn.active { background: var(--team-accent); color: #000; border-color: #fff; }
+        .controls button { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 5px 8px; border-radius: 6px; font-size: 9px; }
+
+        .progress-container { background: rgba(255,255,255,0.05); height: 4px; border-radius: 10px; margin-bottom: 10px; }
+        .progress-bar { background: var(--team-accent); height: 100%; width: 0%; transition: 0.5s; }
+
+        .impact-box { background: rgba(239, 68, 68, 0.1); border: 1px dashed #ef4444; padding: 12px; border-radius: 12px; text-align: center; color: #ff4d4d; font-weight: 900; margin-bottom: 15px; font-size: 12px; }
+
+        .export-btn { background: #fff; color: #000; padding: 18px; border-radius: 12px; border: none; font-weight: 900; text-transform: uppercase; width: 100%; cursor: pointer; font-size: 14px; }
+
+        /* Hidden Export Styling */
+        #export-container { position: absolute; left: -5000px; width: 1080px; height: 1350px; background: #05070a; display: flex; flex-direction: column; }
+        .broadcast-header { height: 280px; background: var(--team-accent); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #000; }
+        .broadcast-body { flex: 1; padding: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-content: start; }
+        .player-tag { background: rgba(255,255,255,0.04); border-left: 8px solid var(--team-accent); padding: 15px 25px; display: flex; align-items: center; gap: 15px; border-radius: 5px; }
+        .impact-footer { height: 120px; background: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 900; font-family: 'Oswald'; color: #fff; }
+    </style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<div class="sidebar">
+    <h1>Franchise</h1>
+    <select id="teamSelect" onchange="initTeam()"></select>
+    
+    <h1>Status <span id="osCount" style="float:right; font-size:10px; opacity:0.6;">OS: 0 / 4</span></h1>
+    <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+
+    <div id="orderList" style="flex:1; overflow-y:auto; margin-bottom:15px;"></div>
+    
+    <div id="impactDisplay" class="impact-box">IMPACT SUB: PENDING</div>
+    <button class="export-btn" onclick="exportGraphic()">Download Graphic</button>
+</div>
+
+<div class="main-view">
+    <div id="teamDisplay" class="team-display">SELECT TEAM</div>
+    <input type="text" id="playerSearch" class="search-bar" placeholder="🔍 Search squad..." oninput="filterSquad()">
+    <div class="squad-grid" id="squadGrid"></div>
+</div>
+
+<div id="export-container">
+    <div class="broadcast-header">
+        <div style="font-size: 25px; font-weight: 900; letter-spacing: 5px; margin-bottom: 10px; opacity: 0.7;">PLAYING 11</div>
+        <div id="exp-team-name" style="font-family: 'Oswald'; font-size: 100px; line-height: 0.9;">TEAM</div>
+    </div>
+    <div class="broadcast-body" id="exp-list"></div>
+    <div class="impact-footer" id="exp-impact">IMPACT SUB: NAME</div>
+</div>
+
+<script>
+    const teamData = {
+        "Chennai Super Kings": { color: "#FADF12", squad: ["Ruturaj Gaikwad (c)", "Ayush Mhatre", "M.S. Dhoni", "Sanju Samson", "Dewald Brevis (O)", "Urvil Patel", "Shivam Dube", "Jamie Overton (O)", "Ramakrishna Ghosh", "Noor Ahmad (O)", "Khaleel Ahmed", "Anshul Kamboj", "Gurjapneet Singh", "Shreyas Gopal", "Mukesh Choudhary", "Nathan Ellis (O)", "Akeal Hosein (O)", "Prashant Veer", "Kartik Sharma", "Matthew Short (O)", "Aman Khan", "Sarfaraz Khan", "Matt Henry (O)", "Rahul Chahar", "Zak Foulkes (O)"] },
+        "Rajasthan Royals": { color: "#EA1A85", squad: ["Ravindra Jadeja", "Sam Curran (O)", "Donovan Ferreira (O)", "Sandeep Sharma", "Shubham Dubey", "Vaibhav Suryavanshi", "Lhuan-Dre Pretorius (O)", "Shimron Hetmyer (O)", "Yashasvi Jaiswal", "Dhruv Jurel", "Riyan Parag", "Yudhvir Singh Charak", "Jofra Archer (O)", "Tushar Deshpande", "Kwena Maphaka (O)", "Nandre Burger (O)", "Ravi Bishnoi", "Sushant Mishra", "Yash Raj Punja", "Vignesh Puthur", "Ravi Singh", "Aman Rao", "Brijesh Sharma", "Adam Milne (O)", "Kuldeep Sen"] },
+        "Kolkata Knight Riders": { color: "#742782", squad: ["Ajinkya Rahane", "Angkrish Raghuvanshi", "Anukul Roy", "Harshit Rana", "Manish Pandey", "Ramandeep Singh", "Rinku Singh", "Rovman Powell (O)", "Sunil Narine (O)", "Umran Malik", "Vaibhav Arora", "Varun Chakaravarthy", "Cameron Green (O)", "Finn Allen (O)", "Matheesha Pathirana (O)", "Tejasvi Singh", "Kartik Tyagi", "Prashant Solanki", "Rahul Tripathi", "Tim Seifert (O)", "Sarthak Ranjan", "Daksh Kamra", "Rachin Ravindra (O)", "Akash Deep", "Blessing Muzarabani (O)"] },
+        "Lucknow Super Giants": { color: "#0057E2", squad: ["Abdul Samad", "Ayush Badoni", "Aiden Markram (O)", "Matthew Breetzke (O)", "Himmat Singh", "Rishabh Pant (c)", "Nicholas Pooran (O)", "Mitchell Marsh (O)", "Shahbaz Ahmed", "Arshin Kulkarni", "Mayank Yadav", "Avesh Khan", "Mohsin Khan", "Manimaran Siddharth", "Digvesh Rathi", "Prince Yadav", "Akash Singh", "Mohammed Shami", "Arjun Tendulkar", "Wanindu Hasaranga (O)", "Anrich Nortje (O)", "Mukul Choudhary", "Naman Tiwari", "Akshat Raghuwanshi", "Josh Inglis (O)"] },
+        "SunRisers Hyderabad": { color: "#F26522", squad: ["Pat Cummins (c) (O)", "Travis Head (O)", "Abhishek Sharma", "Aniket Verma", "R. Smaran", "Ishan Kishan", "Heinrich Klaasen (O)", "Nitish Kumar Reddy", "Harsh Dubey", "Kamindu Mendis (O)", "Harshal Patel", "Brydon Carse (O)", "Jaydev Unadkat", "Eshan Malinga (O)", "Zeeshan Ansari", "Shivang Kumar", "Salil Arora", "Sakib Hussain", "Onkar Tarmale", "Amit Kumar", "Praful Hinge", "Krains Fuletra", "Liam Livingstone (O)", "Shivam Mavi", "Jack Edwards (O)"] },
+        "Delhi Capitals": { color: "#0044BB", squad: ["Nitish Rana", "Abishek Porel", "Ajay Mandal", "Ashutosh Sharma", "Axar Patel", "Dushmantha Chameera (O)", "Karun Nair", "KL Rahul", "Kuldeep Yadav", "Madhav Tiwari", "Mitchell Starc (O)", "Sameer Rizvi", "T Natarajan", "Tripurana Vijay", "Tristan Stubbs (O)", "Vipraj Nigam", "David Miller (O)", "Ben Duckett (O)", "Auqib Nabi", "Pathum Nissanka (O)", "Lungi Ngidi (O)", "Sahil Parakh", "Prithvi Shaw", "Kyle Jamieson (O)"] },
+        "Gujarat Titans": { color: "#1b2133", squad: ["Shubman Gill (c)", "Sai Sudharsan", "Kumar Kushagra", "Anuj Rawat", "Jos Buttler (O)", "Nishant Sindhu", "Washington Sundar", "Glenn Phillips (O)", "Arshad Khan", "Shahrukh Khan", "Rahul Tewatia", "Kagiso Rabada (O)", "Mohammed Siraj", "Prasidh Krishna", "Ishant Sharma", "Gurnoor Singh Brar", "Rashid Khan (O)", "Manav Suthar", "Sai Kishore", "Jayant Yadav", "Ashok Sharma", "Jason Holder (O)", "Tom Banton (O)", "Prithvi Raj Yarra", "Luke Wood (O)"] },
+        "Mumbai Indians": { color: "#004B8D", squad: ["Hardik Pandya", "Rohit Sharma", "Suryakumar Yadav", "Tilak Varma", "Ryan Rickleton (O)", "Robin Minz", "Raj Bawa", "Raghu Sharma", "Mitchell Santner (O)", "Corbin Bosch (O)", "Naman Dhir", "Jasprit Bumrah", "Trent Boult (O)", "Allah Ghafanzar (O)", "Ashwani Kumar", "Deepak Chahar", "Will Jacks (O)", "Sherfane Rutherford (O)", "Mayank Markande", "Shardul Thakur", "Quinton de Kock (O)", "Danish Malewar", "Mohammad Izhar", "Atharva Ankolekar", "Mayank Rawat"] },
+        "Punjab Kings": { color: "#ED1B24", squad: ["Prabhsimran Singh", "Priyansh Arya", "Shreyas Iyer", "Shashank Singh", "Nehal Wadhera", "Marcus Stoinis (O)", "Azmatullah Omarzai (O)", "Marco Jansen (O)", "Harpreet Brar", "Yuzvendra Chahal", "Arshdeep Singh", "Musheer Khan", "Pyala Avinash", "Harnoor Pannu", "Suryansh Shedge", "Mitchell Owen (O)", "Xavier Bartlett (O)", "Lockie Ferguson (O)", "Vyshak Vijaykumar", "Yash Thakur", "Vishnu Vinod", "Cooper Connolly (O)", "Ben Dwarshuis (O)", "Pravin Dubey", "Vishal Nishad"] },
+        "Royal Challengers Bengaluru": { color: "#E63329", squad: ["Rajat Patidar (c)", "Virat Kohli", "Devdutt Padikkal", "Phil Salt (O)", "Jitesh Sharma", "Krunal Pandya", "Swapnil Singh", "Tim David (O)", "Romario Shepherd (O)", "Jacob Bethell (O)", "Josh Hazlewood (O)", "Yash Dayal", "Bhuvneshwar Kumar", "Nuwan Thushara (O)", "Rasikh Salam", "Abhinandan Singh", "Suyash Sharma", "Venkatesh Iyer", "Jacob Duffy (O)", "Satvik Deswal", "Mangesh Yadav", "Jordan Cox (O)", "Vicky Ostwal", "Vihaan Malhotra", "Kanishk Chouhan"] }
+    };
+
+    let selected = [];
+    let roles = {};
+
+    function initTeam() {
+        const teamKey = document.getElementById('teamSelect').value;
+        const color = teamData[teamKey].color;
+        document.documentElement.style.setProperty('--team-accent', color);
+        document.getElementById('teamDisplay').innerText = teamKey.toUpperCase();
+        document.getElementById('playerSearch').value = '';
+        selected = []; roles = {};
+        renderSquad();
+        updateUI();
+    }
+
+    function renderSquad(filterText = '') {
+        const teamKey = document.getElementById('teamSelect').value;
+        const grid = document.getElementById('squadGrid');
+        grid.innerHTML = '';
+        teamData[teamKey].squad.sort().forEach(p => {
+            if (filterText && !p.toLowerCase().includes(filterText.toLowerCase())) return;
+            const div = document.createElement('div');
+            div.className = `p-card ${p.includes('(O)') ? 'is-os' : ''}`;
+            div.innerHTML = `<div class="p-name">${p.replace(' (O)', '')}</div>`;
+            div.onclick = () => { if (selected.length < 12) { selected.push(p); updateUI(); } };
+            grid.appendChild(div);
+        });
+    }
+
+    function filterSquad() { renderSquad(document.getElementById('playerSearch').value); updateUI(); }
+
+    function updateUI() {
+        const list = document.getElementById('orderList');
+        const impact = document.getElementById('impactDisplay');
+        const osVal = document.getElementById('osCount');
+        list.innerHTML = '';
+        let osCount = 0;
+
+        document.querySelectorAll('.p-card').forEach(card => {
+            const name = card.innerText;
+            const teamKey = document.getElementById('teamSelect').value;
+            const fullP = teamData[teamKey].squad.find(s => s.startsWith(name));
+            card.className = selected.includes(fullP) ? 'p-card selected' : (fullP.includes('(O)') ? 'p-card is-os' : 'p-card');
+        });
+
+        selected.slice(0, 11).forEach((p, i) => {
+            if (p.includes('(O)')) osCount++;
+            const row = document.createElement('div');
+            row.className = 'order-row';
+            row.innerHTML = `<span class="num">${i+1}</span><span class="name-cell">${p.replace(' (O)', '')}</span>
+                <button class="badge-btn ${roles[p]?.c ? 'active' : ''}" onclick="toggleRole('${p}','c')">C</button>
+                <button class="badge-btn ${roles[p]?.wk ? 'active' : ''}" onclick="toggleRole('${p}','wk')">WK</button>
+                <div class="controls"><button onclick="move(${i},-1)">▲</button><button onclick="move(${i},1)">▼</button><button style="color:#ef4444" onclick="removeP(${i})">✖</button></div>`;
+            list.appendChild(row);
+        });
+
+        osVal.innerText = `OS: ${osCount} / 4`;
+        osVal.style.color = osCount > 4 ? "#ef4444" : "#64748b";
+        document.getElementById('progressBar').style.width = (selected.length / 12 * 100) + "%";
+        impact.innerText = selected[11] ? "IMPACT SUB: " + selected[11].replace(' (O)', '').toUpperCase() : "IMPACT SUB: PENDING";
+    }
+
+    function toggleRole(p, role) { roles[p] = roles[p] || {c:false, wk:false}; roles[p][role] = !roles[p][role]; updateUI(); }
+    function move(idx, dir) { if (idx+dir>=0 && idx+dir<11) { [selected[idx], selected[idx+dir]]=[selected[idx+dir], selected[idx]]; updateUI(); } }
+    function removeP(idx) { selected.splice(idx, 1); updateUI(); }
+
+    async function exportGraphic() {
+        if (selected.length < 12) return alert("Select 11 + Impact Player!");
+        const teamKey = document.getElementById('teamSelect').value;
+        const team = teamData[teamKey];
+        document.getElementById('exp-team-name').innerText = teamKey.toUpperCase();
+        document.getElementById('exp-impact').innerText = "IMPACT SUB: " + selected[11].replace(' (O)', '').toUpperCase();
+        const expList = document.getElementById('exp-list');
+        expList.innerHTML = '';
+        selected.slice(0, 11).forEach((p, i) => {
+            let label = (roles[p]?.c ? " (C)" : "") + (roles[p]?.wk ? " (WK)" : "");
+            expList.innerHTML += `<div class="player-tag"><span style="font-family:'Oswald'; font-size:40px; color:${team.color}">${i+1}</span><span style="font-size:35px; font-weight:900; color:#fff">${p.replace(' (O)', '').toUpperCase()}${label}</span></div>`;
+        });
+        const canvas = await html2canvas(document.getElementById('export-container'), { scale: 1 });
+        const link = document.createElement('a');
+        link.download = teamKey + "_Draft_XI.png";
+        link.href = canvas.toDataURL(); link.click();
+    }
+
+    const ts = document.getElementById('teamSelect');
+    Object.keys(teamData).forEach(t => ts.add(new Option(t, t)));
+    initTeam();
+</script>
+</body>
+</html>
