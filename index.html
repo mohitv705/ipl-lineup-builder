@@ -13,8 +13,8 @@
             margin: 0; padding: 0; background: var(--bg); color: #fff; 
             font-family: 'Outfit', sans-serif; display: flex; 
             flex-direction: column; 
-            height: 100vh; /* Fallback */
-            height: 100svh; /* FIX: Prevents bottom cut on mobile browsers */
+            height: 100vh;
+            height: 100svh; 
             overflow: hidden; 
         }
 
@@ -79,18 +79,21 @@
             pointer-events: none !important;
         }
 
-        .order-row { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; border-left: 4px solid var(--team-accent); }
+        .order-row { background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; border-left: 4px solid var(--team-accent); }
         .num { font-weight: 900; color: var(--team-accent); width: 20px; font-size: 15px; }
         .name-cell { flex: 1; font-size: 12px; font-weight: 700; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; }
-        .badge-btn { background: #222; border: 1px solid #444; color: #fff; width: 30px; height: 30px; border-radius: 8px; font-size: 10px; font-weight: 900; cursor: pointer; }
+        
+        .btn-group { display: flex; gap: 4px; align-items: center; }
+        .badge-btn, .move-btn { background: #222; border: 1px solid #444; color: #fff; width: 30px; height: 30px; border-radius: 8px; font-size: 10px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .badge-btn.active { background: var(--team-accent); color: #000; border-color: #fff; }
+        .move-btn:active { background: #444; }
 
         .action-bar { 
             padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); 
             background: #050710; 
             border-top: 1px solid var(--border); 
             z-index: 110;
-            flex-shrink: 0; /* FIX: Prevents the button area from being compressed */
+            flex-shrink: 0;
         }
         .export-btn { background: #fff; color: #000; padding: 18px; border-radius: 16px; border: none; font-weight: 900; text-transform: uppercase; width: 100%; font-size: 14px; cursor: pointer; }
         #export-container { position: absolute; left: -9999px; width: 1080px; height: 1350px; background: #05070a; display: flex; flex-direction: column; }
@@ -202,20 +205,43 @@
         renderSquad();
     }
 
+    function movePlayer(index, direction) {
+        const newIndex = index + direction;
+        if (newIndex < 0 || newIndex >= selected.length) return;
+        
+        // Swap elements in array
+        const temp = selected[index];
+        selected[index] = selected[newIndex];
+        selected[newIndex] = temp;
+        
+        updateUI();
+        renderSquad(); // Re-render squad to update OS restrictions if top 11 changed
+    }
+
     function updateUI() {
         const list = document.getElementById('orderList');
         list.innerHTML = '';
         const playingXI = selected.slice(0, 11);
         const osCount = playingXI.filter(p => p.includes('(O)')).length;
 
-        playingXI.forEach((p, i) => {
+        selected.forEach((p, i) => {
+            const isImpact = i === 11;
             const row = document.createElement('div');
             row.className = 'order-row';
-            row.innerHTML = `<span class="num">${i+1}</span>
+            if (isImpact) row.style.borderColor = '#ef4444';
+
+            row.innerHTML = `
+                <span class="num">${isImpact ? 'IS' : i+1}</span>
                 <span class="name-cell">${p.replace(' (O)', '')}</span>
-                <button class="badge-btn ${roles[p]?.c ? 'active' : ''}" onclick="toggleRole('${p}','c')">C</button>
-                <button class="badge-btn ${roles[p]?.wk ? 'active' : ''}" onclick="toggleRole('${p}','wk')">WK</button>
-                <button onclick="removePlayer(${i})" style="background:transparent; border:none; color:#ef4444; font-size:16px; padding:0 10px; cursor:pointer;">✖</button>`;
+                <div class="btn-group">
+                    <button class="move-btn" onclick="movePlayer(${i}, -1)">▲</button>
+                    <button class="move-btn" onclick="movePlayer(${i}, 1)">▼</button>
+                    ${!isImpact ? `
+                        <button class="badge-btn ${roles[p]?.c ? 'active' : ''}" onclick="toggleRole('${p}','c')">C</button>
+                        <button class="badge-btn ${roles[p]?.wk ? 'active' : ''}" onclick="toggleRole('${p}','wk')">WK</button>
+                    ` : ''}
+                    <button onclick="removePlayer(${i})" style="background:transparent; border:none; color:#ef4444; font-size:16px; padding:0 5px; cursor:pointer;">✖</button>
+                </div>`;
             list.appendChild(row);
         });
 
